@@ -1,0 +1,3 @@
+name = "moneybird-incoming-invoice-handler"
+type = "typescript"
+nodejs_compat = true
