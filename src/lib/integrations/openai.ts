@@ -1,37 +1,26 @@
-import fs from "fs";
 import OpenAI from "openai";
 import { Buffer } from "buffer"; // Import Buffer explicitly for environments that need it
 
 
-const OPEN_AI = new OpenAI({
-    apiKey: '', // Replace with your actual API key
-    organization: 'org-Vjk3ht4hqVulK9W0CXYZeXhI', // Replace with the correct organization ID if applicable
-    project: 'proj_iJdGTnAVNpuqoecCNqzKw2Us' // Ensure this is the correct project ID
-});
 
 
-
-
-
-
-
-
-export async function f_uploadFile(fileBuffer, fileName = "document.pdf") {
+export async function f_uploadFile(fileBuffer, env) {
   try {
+    const FILE_NAME = "document.pdf"
     console.log("Type of content:", typeof fileBuffer); // Should be 'object'
     console.log("Is Buffer:", Buffer.isBuffer(fileBuffer)); // Should be true
     console.log("Size of file:", fileBuffer.length, "bytes");
 
     // Create a FormData object
     const formData = new FormData();
-    formData.append("file", new Blob([fileBuffer]), fileName); // Wrap Buffer in Blob
+    formData.append("file", new Blob([fileBuffer]), FILE_NAME); // Wrap Buffer in Blob
     formData.append("purpose", "assistants"); // Adjust the purpose if needed
 
     // Send the request using fetch
     const response = await fetch("https://api.openai.com/v1/files", {
       method: "POST",
       headers: {
-        Authorization: ``, // Replace with your API key
+        Authorization: `Bearer ${env.OPENAI_KEY}`, // Replace with your API key
       },
       body: formData, // Pass FormData directly
     });
@@ -74,19 +63,20 @@ export async function f_uploadFile(fileBuffer, fileName = "document.pdf") {
 }
 
 // export async function f_updateAssistant(FILE_ID) {
-  export async function f_updateAssistant(fileId, assistantId = "asst_QfBs7taU8moqvUO4mPt6nfzt") {
+  export async function f_updateAssistant(fileId, env) {
     try {
-      const url = `https://api.openai.com/v1/assistants/${assistantId}`;
+      const ASSISTANT_ID = "asst_QfBs7taU8moqvUO4mPt6nfzt"
+      const url = `https://api.openai.com/v1/assistants/${ASSISTANT_ID}`;
   
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "OpenAI-Beta": "assistants=v2",
           "Content-Type": "application/json",
-          Authorization: `Bearer `, // Replace with your actual OpenAI API key
+          Authorization: `Bearer ${env.OPENAI_KEY}`, // Replace with your actual OpenAI API key
         },
         body: JSON.stringify({
-          file_ids: [fileId, 'file-662HzvcLRrvD9yLyvX7f7P', 'file-AQtg9bELjriRDBSQFmJP57'], // Array of file IDs to associate with the assistant
+          file_ids: [fileId, 'file-662HzvcLRrvD9yLyvX7f7P', 'file-DJkkfDPch2CtNzK6B3JVu1'], // Array of file IDs to associate with the assistant
         }),
       });
   
@@ -119,21 +109,29 @@ export async function f_uploadFile(fileBuffer, fileName = "document.pdf") {
 // }
  // }
 
- export async function f_queryAssistant(FILE_ID, assistantId = "asst_QfBs7taU8moqvUO4mPt6nfzt") {
+ export async function f_queryAssistant(FILE_ID, env) {
   try {
+    const ASSISTANT_ID = "asst_QfBs7taU8moqvUO4mPt6nfzt"
+
+    const OPEN_AI = new OpenAI({
+      apiKey: env.OPENAI_KEY,
+      organization: env.OPENAI_ORG,
+      project: env.OPENAI_PROJD,
+  });
+
     const emptyThread = await OPEN_AI.beta.threads.create();
 
     console.log("emptyThread: ", emptyThread);
 
     const threadMessages = await OPEN_AI.beta.threads.messages.create(
       emptyThread.id,
-      { role: "user", content: `Analyze the PDF file (${FILE_ID}) carefully and completely and provide me with the following info in JSON-format -company info (where the invoice is send from, can be found in the top left corner, but can also be found in the bottom left corner and it should NOT contain hammertech or instantpack)) -invoice date -exp. date -invoice number -per item a description -per item a relevant ledger account (use one from ledgers.txt, file-662HzvcLRrvD9yLyvX7f7P) -per item a relevant tax (either 0% or 21%) -per item the correct price Notes: Make sure to include all the items and use the context.txtx file (file-AQtg9bELjriRDBSQFmJP57) as context/reference `, attachments:[{file_id: FILE_ID, tools: [{type: "file_search"}]}, {file_id: 'file-662HzvcLRrvD9yLyvX7f7P', tools: [{type: "file_search"}]}, {file_id: 'file-AQtg9bELjriRDBSQFmJP57', tools: [{type: "file_search"}]}] });
+      { role: "user", content: `Analyze the PDF file (${FILE_ID}) carefully and completely and provide me with the following info in JSON-format -company info (where the invoice is send from, can be found in the top left corner, but can also be found in the bottom left corner and it should NOT contain hammertech or instantpack)) -invoice date -exp. date -invoice number -per item a description -per item a relevant ledger account (use one from ledgers.txt, file-662HzvcLRrvD9yLyvX7f7P) -per item a relevant tax (either 0% or 21%) -per item the correct price Notes: Make sure to include all the items and use the context.txtx file (file-DJkkfDPch2CtNzK6B3JVu1) as context/reference `, attachments:[{file_id: FILE_ID, tools: [{type: "file_search"}]}, {file_id: 'file-662HzvcLRrvD9yLyvX7f7P', tools: [{type: "file_search"}]}, {file_id: 'file-DJkkfDPch2CtNzK6B3JVu1', tools: [{type: "file_search"}]}] });
   
     console.log("threadMessages: ", threadMessages);
 
     const run = await OPEN_AI.beta.threads.runs.create(
       emptyThread.id,
-      { assistant_id: assistantId }
+      { assistant_id: ASSISTANT_ID }
     );
   
     console.log("run: ", run);

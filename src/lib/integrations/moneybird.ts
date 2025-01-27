@@ -106,7 +106,9 @@ export async function f_mapData(MSG_RESPONSE: any, INVOICE_ID: string, MONEYBIRD
         "price": item.price,
         "amount": item.quantity || 0,
         "tax_rate_id": f_getTaxRateId(item.tax),
-        "ledger_account_id": await f_getLedgerAccountID(item.ledger_account, MONEYBIRD_ID, MONEYBIRD_TOKEN)
+        "tax_rate": item.tax, //DEBUG
+        "ledger_account_id": await f_getLedgerAccountID(item.ledger_account, MONEYBIRD_ID, MONEYBIRD_TOKEN),
+        "ledger_account": item.ledger_account //DEBUG
     })));
     
     const MAPPED_DATA = {
@@ -115,6 +117,7 @@ export async function f_mapData(MSG_RESPONSE: any, INVOICE_ID: string, MONEYBIRD
         "date": MSG_RESPONSE.invoice_date,
         "due_date": MSG_RESPONSE.exp_date,
         "contact_id": await f_getContactID(MSG_RESPONSE.company_info.name, MSG_RESPONSE.company_info.KVK, MONEYBIRD_ID, MONEYBIRD_TOKEN),
+        "contact": MSG_RESPONSE.company_info.name, //DEBUG
         "currency": "EUR",
         "prices_are_incl_tax": false,
         "details_attributes": detailsAttributes
@@ -148,12 +151,10 @@ async function f_getLedgerAccountID(LEDGER_aCCOUNT: string, MONEYBIRD_ID: string
 }
 
 async function f_getContactID(COMPANY_NAME: string, KvK: string, MONEYBIRD_ID: string, MONEYBIRD_TOKEN: string): string {
-    const RESPONSE = await f_getAPIdata('contacts.json', '', MONEYBIRD_ID, MONEYBIRD_TOKEN, true);
-    console.log("contact: ", COMPANY_NAME);
+    const RESPONSE = await f_getAPIdata('contacts.json', `query=${COMPANY_NAME}&query=${KvK}`, MONEYBIRD_ID, MONEYBIRD_TOKEN, true);
     for (let i = 0; i < RESPONSE.length; i++) {
         console.log("contact: ", RESPONSE[i].company_name, " | KvK: ", RESPONSE[i].chamber_of_commerce);
         if (RESPONSE[i].chamber_of_commerce = (KvK) || (RESPONSE[i].company_name === COMPANY_NAME)) {
-            console.log("contact id: ", RESPONSE[i].id);
             return RESPONSE[i].id;
         }
     }

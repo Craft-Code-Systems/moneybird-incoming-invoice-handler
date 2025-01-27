@@ -20,18 +20,20 @@
 import * as moneybird from "./lib/integrations/moneybird";
 import * as openai from "./lib/integrations/openai";
 
+const INVOICE_NO = 25;
+
 export default {
 	async fetch(request: Request, env: any, ctx: ExecutionContext): Promise<Response> {
 
-	const RESPONSE = await moneybird.f_getAPIdata('documents/purchase_invoices.json', 'filter/period:prev_year,state:new/', env.MONEYBIRD_ID, env.MONEYBIRD_TOKEN, true);
+	const RESPONSE = await moneybird.f_getAPIdata('documents/purchase_invoices.json', 'filter=period:prev_year,state:new', env.MONEYBIRD_ID, env.MONEYBIRD_TOKEN, true);
 	const INVOICE_DATA = f_parseInvoiceData(RESPONSE);
 	
-	const RESPONSE_FILE = await moneybird.f_getAPIdata(`documents/purchase_invoices/${INVOICE_DATA[4].invoice_attachment_id}/attachments/${INVOICE_DATA[4].invoice_attachment_id}/download`, '', env.MONEYBIRD_ID, env.MONEYBIRD_TOKEN, false);
-	const FILE_ID = await openai.f_uploadFile(RESPONSE_FILE);
+	const RESPONSE_FILE = await moneybird.f_getAPIdata(`documents/purchase_invoices/${INVOICE_DATA[INVOICE_NO].invoice_attachment_id}/attachments/${INVOICE_DATA[INVOICE_NO].invoice_attachment_id}/download`, '', env.MONEYBIRD_ID, env.MONEYBIRD_TOKEN, false);
+	const FILE_ID = await openai.f_uploadFile(RESPONSE_FILE, env);
 	
-	const ASSISTANT_RESPONSE = await openai.f_updateAssistant(FILE_ID);
-	const MSG_RESPONSE = await openai.f_queryAssistant(FILE_ID);
-	const MAPPED_DATA = await moneybird.f_mapData(MSG_RESPONSE, INVOICE_DATA[4].id, env.MONEYBIRD_ID, env.MONEYBIRD_TOKEN);
+	const ASSISTANT_RESPONSE = await openai.f_updateAssistant(FILE_ID, env);
+	const MSG_RESPONSE = await openai.f_queryAssistant(FILE_ID, env);
+	const MAPPED_DATA = await moneybird.f_mapData(MSG_RESPONSE, INVOICE_DATA[INVOICE_NO].id, env.MONEYBIRD_ID, env.MONEYBIRD_TOKEN);
 
 	return new Response(JSON.stringify(MAPPED_DATA), { status: 200 });
 	},
