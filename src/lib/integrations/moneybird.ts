@@ -36,8 +36,13 @@ export async function f_getAPIdata(ENDPOINT: string, PARAMETERS: string, MONEYBI
             const DATA = await RESPONSE.json();
             return DATA;
         }else{
-        const DATA = await RESPONSE.arrayBuffer();
-        return DATA;
+            // Check if response header content-type is application/pdf
+            if (RESPONSE.headers.get('Content-Type') === 'application/pdf') {
+                const DATA = await RESPONSE.arrayBuffer();
+                return DATA;
+            }else{
+                return null;
+            }
         }
 
     } catch (err) {

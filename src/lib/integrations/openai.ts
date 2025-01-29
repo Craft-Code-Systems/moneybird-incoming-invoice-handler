@@ -7,9 +7,11 @@ import { Buffer } from "buffer"; // Import Buffer explicitly for environments th
 export async function f_uploadFile(fileBuffer, env) {
   try {
     const FILE_NAME = "document.pdf"
-    console.log("Type of content:", typeof fileBuffer); // Should be 'object'
-    console.log("Is Buffer:", Buffer.isBuffer(fileBuffer)); // Should be true
-    console.log("Size of file:", fileBuffer.length, "bytes");
+
+    if (!fileBuffer || fileBuffer.length === 0) {
+      console.error("No file buffer provided");
+      return null;
+    }
 
     // Create a FormData object
     const formData = new FormData();
@@ -65,6 +67,10 @@ export async function f_uploadFile(fileBuffer, env) {
 // export async function f_updateAssistant(FILE_ID) {
   export async function f_updateAssistant(fileId, env) {
     try {
+      if (!fileId || fileId.length === 0) {
+        console.error("No file ID provided");
+        return null;
+      }
       const ASSISTANT_ID = "asst_QfBs7taU8moqvUO4mPt6nfzt"
       const url = `https://api.openai.com/v1/assistants/${ASSISTANT_ID}`;
   
@@ -113,6 +119,11 @@ export async function f_uploadFile(fileBuffer, env) {
   try {
     const ASSISTANT_ID = "asst_QfBs7taU8moqvUO4mPt6nfzt"
 
+    if (!FILE_ID || FILE_ID.length === 0) {
+      console.error("No file ID provided");
+      return null;
+    }
+    
     const OPEN_AI = new OpenAI({
       apiKey: env.OPENAI_KEY,
       organization: env.OPENAI_ORG,
