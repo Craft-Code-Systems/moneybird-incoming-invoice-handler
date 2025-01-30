@@ -1,21 +1,28 @@
 import OpenAI from "openai";
 import { Buffer } from "buffer"; // Import Buffer explicitly for environments that need it
+import * as interfaces from "../interfaces";
 
 
 
-
-export async function f_uploadFile(fileBuffer, env) {
+/**
+ * Uploads a file to the OpenAI API as a Buffer and returns the file ID.
+ * @param {Buffer} FILE_BUFFER The file buffer to upload.
+ * @param {any} env The environment object containing the OPENAI_KEY.
+ * @returns {string | null} The file ID if successful, or null if not.
+ * @throws Error when uploading fails.
+ */
+export async function f_uploadFile(FILE_BUFFER: Buffer, env: any): Promise<string | null> {
   try {
     const FILE_NAME = "document.pdf"
 
-    if (!fileBuffer || fileBuffer.length === 0) {
+    if (!FILE_BUFFER || FILE_BUFFER.length === 0) {
       console.error("No file buffer provided");
       return null;
     }
 
     // Create a FormData object
     const formData = new FormData();
-    formData.append("file", new Blob([fileBuffer]), FILE_NAME); // Wrap Buffer in Blob
+    formData.append("file", new Blob([FILE_BUFFER]), FILE_NAME); // Wrap Buffer in Blob
     formData.append("purpose", "assistants"); // Adjust the purpose if needed
 
     // Send the request using fetch
@@ -33,48 +40,33 @@ export async function f_uploadFile(fileBuffer, env) {
       return null;
     }
 
-    const responseData = await response.json();
-    console.log("Uploaded File ID:", responseData.id);
-    return responseData.id;
-  } catch (error) {
-    console.error("f_uploadFile Error:", error.message);
+    const RESPONSE_DATA: OpenAI.FileObject = await response.json();
+    console.log("Uploaded File ID:", RESPONSE_DATA.id);
+    return RESPONSE_DATA.id;
+  } catch (ERROR: any) {
+    console.error("f_uploadFile Error:", ERROR.message);
     return null;
   }
-//   try{
 
-//     const fileBuffer = Buffer.from(pdfContent); // Ensure binary format
-//     console.log("File size:", pdfContent.length, "bytes");
-
-//     console.log("Type of content:", typeof fileBuffer); // Should be 'object'
-//     console.log("Is Buffer:", Buffer.isBuffer(fileBuffer)); // Should be true
-//     console.log("Size of file:", Buffer.from(fileBuffer).length, "bytes");
-//     // Upload the file to OpenAI
-//     const response = await OPEN_AI.files.create({
-//       file: fileBuffer,
-//       purpose: "assistants", // Use the appropriate purpose for your use case
-//     });
-
-//     console.log("response: ", await response);
-
-//   console.log(file);
-//   return file.id;
-// } catch (error) {
-//   console.error("f_uploadFile: ", error);
-//   return null;
-// }
 }
 
-// export async function f_updateAssistant(FILE_ID) {
-  export async function f_updateAssistant(fileId, env) {
+
+  /**
+   * Updates an OpenAI assistant with a given file ID, associating it with the assistant.
+   * @param {string} FILE_ID - The ID of the file to associate with the assistant.
+   * @param {any} env - The environment object, containing the OpenAI API key.
+   * @returns {Promise<OpenAI.Beta.Assistant | null>} - The response from the update request, or null if an error occurred.
+   */
+  export async function f_updateAssistant(FILE_ID: string, env: any): Promise<OpenAI.Beta.Assistant | null> {
     try {
-      if (!fileId || fileId.length === 0) {
+      if (!FILE_ID || FILE_ID.length === 0) {
         console.error("No file ID provided");
         return null;
       }
-      const ASSISTANT_ID = "asst_QfBs7taU8moqvUO4mPt6nfzt"
-      const url = `https://api.openai.com/v1/assistants/${ASSISTANT_ID}`;
+      const ASSISTANT_ID: string = "asst_QfBs7taU8moqvUO4mPt6nfzt"
+      const URL: string = `https://api.openai.com/v1/assistants/${ASSISTANT_ID}`;
   
-      const response = await fetch(url, {
+      const RESPONSE: any = await fetch(URL, {
         method: "POST",
         headers: {
           "OpenAI-Beta": "assistants=v2",
@@ -82,99 +74,86 @@ export async function f_uploadFile(fileBuffer, env) {
           Authorization: `Bearer ${env.OPENAI_KEY}`, // Replace with your actual OpenAI API key
         },
         body: JSON.stringify({
-          file_ids: [fileId, 'file-662HzvcLRrvD9yLyvX7f7P', 'file-DJkkfDPch2CtNzK6B3JVu1'], // Array of file IDs to associate with the assistant
+          file_ids: [FILE_ID, 'file-662HzvcLRrvD9yLyvX7f7P', 'file-3ouxWDDopRb4WE6kntmFD9', 'file-PUPSdrpLr4DK2FHvBrRVaX'], // Array of file IDs to associate with the assistant
         }),
       });
   
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Failed to update assistant:", errorData);
+      if (!RESPONSE.ok) {
+        const ERROR_DATA = await RESPONSE.json();
+        console.error("Failed to update assistant:", ERROR_DATA);
         return null;
       }
   
-      const responseData = await response.json();
-      console.log("Updated Assistant:", responseData);
-      return responseData;
-    } catch (error) {
-      console.error("f_updateAssistant Error:", error.message);
+      const RESPONSE_DATA: OpenAI.Beta.Assistant = await RESPONSE.json();
+      return RESPONSE_DATA;
+    } catch (ERROR: any) {
+      console.error("f_updateAssistant Error:", ERROR.message);
       return null;
     }
   }
   
-//     try{
-//     const myUpdatedAssistant = await OPEN_AI.beta.assistants.update(
-//       "asst_QfBs7taU8moqvUO4mPt6nfzt",
-//       {
-//         file_ids: [FILE_ID],
-//       }
-//     );
-  
-//     console.log(JSON.stringify(myUpdatedAssistant));
-// } catch (error) {
-//     console.error(error);
-// }
- // }
 
- export async function f_queryAssistant(FILE_ID, env) {
+/**
+ * Queries the OpenAI assistant for a given file ID, and returns the assistant's response in the expected JSON format.
+ * @param {string} FILE_ID - The ID of the file to analyze.
+ * @param {any} env - The environment object, containing the necessary OpenAI API keys and organization/project IDs.
+ * @returns {Promise<interfaces.parsedInvoiceData | null>} - The parsed JSON response from the assistant, or null if an error occurred.
+ */
+ export async function f_queryAssistant(FILE_ID: string, env: any): Promise<interfaces.parsedInvoiceData | null> {
   try {
-    const ASSISTANT_ID = "asst_QfBs7taU8moqvUO4mPt6nfzt"
+    const ASSISTANT_ID: string = "asst_QfBs7taU8moqvUO4mPt6nfzt"
 
     if (!FILE_ID || FILE_ID.length === 0) {
       console.error("No file ID provided");
       return null;
     }
     
-    const OPEN_AI = new OpenAI({
+    const OPEN_AI: OpenAI = new OpenAI({
       apiKey: env.OPENAI_KEY,
       organization: env.OPENAI_ORG,
       project: env.OPENAI_PROJD,
   });
 
-    const emptyThread = await OPEN_AI.beta.threads.create();
-
-    console.log("emptyThread: ", emptyThread);
+    const EMPTY_THREAD: OpenAI.Beta.Thread = await OPEN_AI.beta.threads.create();
 
     const threadMessages = await OPEN_AI.beta.threads.messages.create(
-      emptyThread.id,
-      { role: "user", content: `Analyze the PDF file (${FILE_ID}) carefully and completely and provide me with the following info in JSON-format -company info (where the invoice is send from, can be found in the top left corner, but can also be found in the bottom left corner and it should NOT contain hammertech or instantpack)) -invoice date -exp. date -invoice number -per item a description -per item a relevant ledger account (use one from ledgers.txt, file-662HzvcLRrvD9yLyvX7f7P) -per item a relevant tax (either 0% or 21%) -per item the correct price Notes: Make sure to include all the items and use the context.txtx file (file-DJkkfDPch2CtNzK6B3JVu1) as context/reference `, attachments:[{file_id: FILE_ID, tools: [{type: "file_search"}]}, {file_id: 'file-662HzvcLRrvD9yLyvX7f7P', tools: [{type: "file_search"}]}, {file_id: 'file-DJkkfDPch2CtNzK6B3JVu1', tools: [{type: "file_search"}]}] });
-  
-    console.log("threadMessages: ", threadMessages);
+      EMPTY_THREAD.id,
+      { role: "user", content: `Analyze the PDF file (${FILE_ID}) carefully and completely and provide me with the following info in JSON-format (see example.json (file-PUPSdrpLr4DK2FHvBrRVaX) for the correct format) -company info (where the invoice is send from, can be found in the top left corner, but can also be found in the bottom left corner and it should NOT contain hammertech or instantpack)) -invoice date -exp. date (30 days from invoice dateif not specified) -invoice number -KvK number -per item a description -per item a relevant ledger account (use one from ledgers.txt, file-662HzvcLRrvD9yLyvX7f7P) -per item a relevant tax (either 0% or 21%) -per item the correct price (can not be 0). Notes: Make sure to include all the items and use the context.txt file (file-3ouxWDDopRb4WE6kntmFD9) as context/reference `, attachments:[{file_id: FILE_ID, tools: [{type: "file_search"}]}, {file_id: 'file-662HzvcLRrvD9yLyvX7f7P', tools: [{type: "file_search"}]}, {file_id: 'file-3ouxWDDopRb4WE6kntmFD9', tools: [{type: "file_search"}]}, {file_id: 'file-PUPSdrpLr4DK2FHvBrRVaX', tools: [{type: "file_search"}]}] });
 
-    const run = await OPEN_AI.beta.threads.runs.create(
-      emptyThread.id,
+    const STARTED_RUN: OpenAI.Beta.Threads.Run = await OPEN_AI.beta.threads.runs.create(
+      EMPTY_THREAD.id,
       { assistant_id: ASSISTANT_ID }
     );
   
-    console.log("run: ", run);
-
-
 let run_status = "";
 while (run_status !== "completed") {
-  const runs = await OPEN_AI.beta.threads.runs.retrieve(
-    emptyThread.id,
-    run.id
+  const RUN: OpenAI.Beta.Threads.Run = await OPEN_AI.beta.threads.runs.retrieve(
+    EMPTY_THREAD.id,
+    STARTED_RUN.id
   );
-  run_status = runs.status;
+  run_status = RUN.status;
   console.log("run_status: ", run_status);
 }
 
 
-      const threadMessages2 = await OPEN_AI.beta.threads.messages.list(
-        emptyThread.id
+      const THREAD_MSGS: any = await OPEN_AI.beta.threads.messages.list(
+        EMPTY_THREAD.id
       );
-    const last_msg = threadMessages2.data.filter((message) => run.id === message.run_id && message.role === "assistant");
-      const match = last_msg[0].content[0].text.value.match(/```json\n([\s\S]*?)\n```/);
-      if (match) {
-        const jsonString = match[1];
-        const jsonData = JSON.parse(jsonString);
-        console.log(jsonData);
-        return jsonData;
+    const LAST_MSG: any = THREAD_MSGS.data.filter((message: any) => STARTED_RUN.id === message.run_id && message.role === "assistant");
+      const MATCH: any = LAST_MSG[0].content[0].text.value.match(/```json\n([\s\S]*?)\n```/);
+      if (MATCH) {
+        const JSON_STRING: string = MATCH[1];
+        const JSON_DATA: interfaces.parsedInvoiceData = JSON.parse(JSON_STRING);
+        console.log(JSON_DATA);
+        return JSON_DATA;
       }
 
       return "FAILED";
-  } catch (error) {
-    console.error("f_queryAssistant Error:", error.message);
+  } catch (ERROR: any) {
+    console.error("f_queryAssistant Error:", ERROR.message);
     return null;
   }
 }
+
+
 
