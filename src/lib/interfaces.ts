@@ -12,7 +12,7 @@ export interface Item {
     ledger_account: string;
     quantity: number;
     tax: string;
-    price: string;
+    price: number;
 }
 
 export interface CompanyInfo {
@@ -25,6 +25,7 @@ export interface InvoiceDetails {
     invoice_number: string;
     invoice_date: string;
     exp_date: string;
+    total_price: number;
 }
 
 //Moneybird API responses

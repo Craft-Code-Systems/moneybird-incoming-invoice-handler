@@ -74,7 +74,7 @@ export async function f_uploadFile(FILE_BUFFER: Buffer, env: any): Promise<strin
           Authorization: `Bearer ${env.OPENAI_KEY}`, // Replace with your actual OpenAI API key
         },
         body: JSON.stringify({
-          file_ids: [FILE_ID, 'file-662HzvcLRrvD9yLyvX7f7P', 'file-3ouxWDDopRb4WE6kntmFD9', 'file-PUPSdrpLr4DK2FHvBrRVaX'], // Array of file IDs to associate with the assistant
+          file_ids: [FILE_ID, 'file-662HzvcLRrvD9yLyvX7f7P', 'file-9XCDCnoeYX4tosZP78QMrz', 'file-WWUxrf3rho67fCRH1q5qJh'], // Array of file IDs to associate with the assistant
         }),
       });
   
@@ -99,7 +99,7 @@ export async function f_uploadFile(FILE_BUFFER: Buffer, env: any): Promise<strin
  * @param {any} env - The environment object, containing the necessary OpenAI API keys and organization/project IDs.
  * @returns {Promise<interfaces.parsedInvoiceData | null>} - The parsed JSON response from the assistant, or null if an error occurred.
  */
- export async function f_queryAssistant(FILE_ID: string, env: any): Promise<interfaces.parsedInvoiceData | null> {
+ export async function f_queryAssistant(FILE_ID: string, env: any, query: string): Promise<interfaces.parsedInvoiceData | null> {
   try {
     const ASSISTANT_ID: string = "asst_QfBs7taU8moqvUO4mPt6nfzt"
 
@@ -118,7 +118,7 @@ export async function f_uploadFile(FILE_BUFFER: Buffer, env: any): Promise<strin
 
     const threadMessages = await OPEN_AI.beta.threads.messages.create(
       EMPTY_THREAD.id,
-      { role: "user", content: `Analyze the PDF file (${FILE_ID}) carefully and completely and provide me with the following info in JSON-format (see example.json (file-PUPSdrpLr4DK2FHvBrRVaX) for the correct format) -company info (where the invoice is send from, can be found in the top left corner, but can also be found in the bottom left corner and it should NOT contain hammertech or instantpack)) -invoice date -exp. date (30 days from invoice dateif not specified) -invoice number -KvK number -per item a description -per item a relevant ledger account (use one from ledgers.txt, file-662HzvcLRrvD9yLyvX7f7P) -per item a relevant tax (either 0% or 21%) -per item the correct price (can not be 0). Notes: Make sure to include all the items and use the context.txt file (file-3ouxWDDopRb4WE6kntmFD9) as context/reference `, attachments:[{file_id: FILE_ID, tools: [{type: "file_search"}]}, {file_id: 'file-662HzvcLRrvD9yLyvX7f7P', tools: [{type: "file_search"}]}, {file_id: 'file-3ouxWDDopRb4WE6kntmFD9', tools: [{type: "file_search"}]}, {file_id: 'file-PUPSdrpLr4DK2FHvBrRVaX', tools: [{type: "file_search"}]}] });
+      { role: "user", content: query, attachments:[{file_id: FILE_ID, tools: [{type: "file_search"}]}, {file_id: 'file-662HzvcLRrvD9yLyvX7f7P', tools: [{type: "file_search"}]}, {file_id: 'file-9XCDCnoeYX4tosZP78QMrz', tools: [{type: "file_search"}]}, {file_id: 'file-WWUxrf3rho67fCRH1q5qJh', tools: [{type: "file_search"}]}] });
 
     const STARTED_RUN: OpenAI.Beta.Threads.Run = await OPEN_AI.beta.threads.runs.create(
       EMPTY_THREAD.id,
@@ -144,7 +144,7 @@ while (run_status !== "completed") {
       if (MATCH) {
         const JSON_STRING: string = MATCH[1];
         const JSON_DATA: interfaces.parsedInvoiceData = JSON.parse(JSON_STRING);
-        console.log(JSON_DATA);
+        // console.log(JSON_DATA);
         return JSON_DATA;
       }
 

@@ -112,7 +112,7 @@ export async function f_patchAPIdata(ENDPOINT: string, DATA: object, MONEYBIRD_I
         const RESPONSE: Response = await fetch(`https://moneybird.com/api/v2/${MONEYBIRD_ID}/${ENDPOINT}`, OPTIONS);
 
         if (!RESPONSE.ok || ![200, 201, 202].includes(RESPONSE.status)) {
-            console.log("Error: ", RESPONSE.status, RESPONSE.statusText, "Response: ", await RESPONSE.text());
+            console.log("Error: ", RESPONSE.status, RESPONSE.statusText, "Response: ", await RESPONSE.text() + "Data: " +  JSON.stringify(DATA));
             return { status: "ERROR", error: `${RESPONSE.status} - ${RESPONSE.statusText}` };
         }
 
@@ -120,7 +120,7 @@ export async function f_patchAPIdata(ENDPOINT: string, DATA: object, MONEYBIRD_I
         return RESPONSE_DATA;
 
     } catch (ERROR: any) {
-        console.error('Error:', ERROR);
+        console.error('Error:' + ERROR + "Data: " +  JSON.stringify(DATA));
         return null;
     }
 }
@@ -200,7 +200,7 @@ function f_getTaxRateId(TAX_RATE: string): string {
 async function f_getLedgerAccountID(LEDGER_aCCOUNT: string, MONEYBIRD_ID: string, MONEYBIRD_TOKEN: string): Promise<string> {
     const RESPONSE: interfaces.ApiResponse = await f_getAPIdata('ledger_accounts.json', '', MONEYBIRD_ID, MONEYBIRD_TOKEN, true);
     for (let i = 0; i < RESPONSE.length; i++) {
-        if (RESPONSE[i].name === LEDGER_aCCOUNT) {
+        if ((RESPONSE[i].name).toLowerCase() === LEDGER_aCCOUNT.toLowerCase()) {
             return RESPONSE[i].id;
         }
     }
