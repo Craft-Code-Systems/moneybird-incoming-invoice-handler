@@ -1,0 +1,26 @@
+diff --git a/node_modules/@cloudflare/puppeteer/lib/esm/puppeteer/cloudflare/globalPatcher.js b/node_modules/@cloudflare/puppeteer/lib/esm/puppeteer/cloudflare/globalPatcher.js
+index 1bdcaef..b016ee7 100644
+--- a/node_modules/@cloudflare/puppeteer/lib/esm/puppeteer/cloudflare/globalPatcher.js
++++ b/node_modules/@cloudflare/puppeteer/lib/esm/puppeteer/cloudflare/globalPatcher.js
+@@ -3,6 +3,6 @@
+  * Copyright 2025 Google Inc.
+  * SPDX-License-Identifier: Apache-2.0
+  */
+-import { Buffer } from 'node:buffer';
++import { Buffer } from "buffer";
+ globalThis.Buffer = Buffer;
+ //# sourceMappingURL=globalPatcher.js.map
+\ No newline at end of file
+diff --git a/node_modules/@cloudflare/puppeteer/lib/esm/puppeteer/common/util.js b/node_modules/@cloudflare/puppeteer/lib/esm/puppeteer/common/util.js
+index e352748..2c70727 100644
+--- a/node_modules/@cloudflare/puppeteer/lib/esm/puppeteer/common/util.js
++++ b/node_modules/@cloudflare/puppeteer/lib/esm/puppeteer/common/util.js
+@@ -3,7 +3,7 @@
+  * Copyright 2017 Google Inc.
+  * SPDX-License-Identifier: Apache-2.0
+  */
+-import { Buffer } from 'node:buffer';
++import { Buffer } from "buffer";
+ import { filter, from, map, mergeMap, NEVER, Observable, timer, } from '../../third_party/rxjs/rxjs.js';
+ // import {isNode} from '../environment.js';
+ import { assert } from '../util/assert.js';

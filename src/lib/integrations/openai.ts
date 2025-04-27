@@ -74,7 +74,7 @@ export async function f_uploadFile(FILE_BUFFER: Buffer, env: any): Promise<strin
           Authorization: `Bearer ${env.OPENAI_KEY}`, // Replace with your actual OpenAI API key
         },
         body: JSON.stringify({
-          file_ids: [FILE_ID, 'file-662HzvcLRrvD9yLyvX7f7P', 'file-9XCDCnoeYX4tosZP78QMrz', 'file-WWUxrf3rho67fCRH1q5qJh'], // Array of file IDs to associate with the assistant
+          file_ids: [FILE_ID, 'file-662HzvcLRrvD9yLyvX7f7P', 'file-L7qRsifZZndeU2iYSgjnWt', 'file-WWUxrf3rho67fCRH1q5qJh'], // Array of file IDs to associate with the assistant
         }),
       });
   
@@ -118,7 +118,7 @@ export async function f_uploadFile(FILE_BUFFER: Buffer, env: any): Promise<strin
 
     const threadMessages = await OPEN_AI.beta.threads.messages.create(
       EMPTY_THREAD.id,
-      { role: "user", content: query, attachments:[{file_id: FILE_ID, tools: [{type: "file_search"}]}, {file_id: 'file-662HzvcLRrvD9yLyvX7f7P', tools: [{type: "file_search"}]}, {file_id: 'file-9XCDCnoeYX4tosZP78QMrz', tools: [{type: "file_search"}]}, {file_id: 'file-WWUxrf3rho67fCRH1q5qJh', tools: [{type: "file_search"}]}] });
+      { role: "user", content: query, attachments:[{file_id: FILE_ID, tools: [{type: "file_search"}]}, {file_id: 'file-662HzvcLRrvD9yLyvX7f7P', tools: [{type: "file_search"}]}, {file_id: 'file-L7qRsifZZndeU2iYSgjnWt', tools: [{type: "file_search"}]}, {file_id: 'file-WWUxrf3rho67fCRH1q5qJh', tools: [{type: "file_search"}]}] });
 
     const STARTED_RUN: OpenAI.Beta.Threads.Run = await OPEN_AI.beta.threads.runs.create(
       EMPTY_THREAD.id,
@@ -127,6 +127,8 @@ export async function f_uploadFile(FILE_BUFFER: Buffer, env: any): Promise<strin
   
 let run_status = "";
 while (run_status !== "completed") {
+  // Add delay
+  await new Promise((resolve) => setTimeout(resolve, 5000));
   const RUN: OpenAI.Beta.Threads.Run = await OPEN_AI.beta.threads.runs.retrieve(
     EMPTY_THREAD.id,
     STARTED_RUN.id

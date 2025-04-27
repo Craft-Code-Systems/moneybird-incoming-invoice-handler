@@ -7,20 +7,24 @@
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "test": "vitest",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250121.0",
     "@types/node": "^22.12.0",
     "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "typescript": "^5.5.2",
-    "vitest": "2.1.8"
+    "vitest": "2.1.8",
+    "wrangler": "^4.13.2"
   },
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
+    "@cloudflare/puppeteer": "^1.0.2",
     "@cloudflare/vitest-pool-workers": "^0.6.4",
     "acorn": "^8.14.0",
     "acorn-walk": "^8.3.4",

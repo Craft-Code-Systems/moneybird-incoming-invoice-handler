@@ -1,7 +1,7 @@
 import * as fedexInterface from './fedex_interface';
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-puppeteer.use(StealthPlugin());
+import puppeteer from "@cloudflare/puppeteer";
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 
 // /**
 //  * Gets the FedEx bearer TOKEN and saves it to the environment variable "FEDEX_BEARER_TOKEN"
@@ -205,80 +205,57 @@ async function fetchWithRetry(
   throw new Error('Max retries reached. Request failed.');
 }
 
-export async function getCookie(AUTH: fedexInterface.auth): Promise<fedexInterface.auth | null> {
-  const BROWSER: puppeteer.Browser = await puppeteer.launch({
-    headless: false,
-    args: [
-      '--no-sandbox',               // might help in some environments
-      '--disable-setuid-sandbox',
-      '--disable-blink-features=AutomationControlled',
-      '--disable-web-security',
-    ]
-  });
+export async function getCookie(
+  AUTH: FedExAuth,
+  browserBinding: Fetcher): Promise<FedExAuth | undefined> {
+  // launch against the Cloudflare Browser binding
+  const browser = await puppeteer.launch(browserBinding);
 
-  // Close default pages (if any)
-  const DEFAULT_PAGE = await BROWSER.pages();
-  for (const PAGE of DEFAULT_PAGE) {
-    if (PAGE.url() === 'about:blank') {
-      await PAGE.close();
-    }
+  // open a fresh page
+  const page = await browser.newPage();
+
+  // FedEx login flow
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
+  );
+  await page.setViewport({ width: 1200, height: 720 });
+
+  await page.goto(
+    "https://www.fedex.com/secure-login/nl-nl/#/credentials",
+    { waitUntil: "networkidle2", timeout: 60_000 }
+  );
+  await sleep(2000);
+
+  await page.type("#username", AUTH.web_client_username);
+  await sleep(1000);
+  await page.type("#password", AUTH.web_client_password);
+  await sleep(2000);
+
+  await Promise.all([
+    page.click("#login_button"),
+    page.waitForNavigation({ waitUntil: "networkidle2" })
+  ]);
+  await sleep(1000);
+
+  await page.goto("https://www.fedex.com/online/billing/cbs/summary", { waitUntil: "networkidle2" });
+  await sleep(8000);
+
+  // if there’s a “CONTINUE” button, click it
+  try {
+    await page.click("text=CONTINUE");
+  } catch {
+    // no-op if it’s not there
   }
 
-  // Use the default context for now
-  const PAGE: puppeteer.Page = await BROWSER.newPage();
-  await PAGE.setUserAgent(
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'
-  );
-  await PAGE.setViewport({ width: 1200, height: 720 });
+  // grab all cookies for the current page
+  const cookies = await page.cookies();
+  const cookieString = cookies.map(c => `${c.name}=${c.value}`).join("; ");
 
-  // Navigate to the login PAGE with adjusted wait conditions
-  await PAGE.goto('https://www.fedex.com/secure-login/nl-nl/#/credentials', {
-    waitUntil: 'networkidle2',
-    timeout: 60000, // 60 seconds
-  });
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await browser.close();
 
-  // Fill in login form
-  await PAGE.type('#username', CREDS.username);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  await PAGE.type('#password', CREDS.password);
-  await new Promise(resolve => setTimeout(resolve, 2000));
-
-  // Click and wait for navigation
-    await Promise.all([
-      PAGE.click('#login_button'),
-      new Promise(resolve => setTimeout(resolve, 1000)),
-      PAGE.waitForNavigation({ waitUntil: 'networkidle2' }),
-    ]);
-  new Promise(resolve => setTimeout(resolve, 1000));
-  await PAGE.click('text= Alle cookies accepteren');
-  new Promise(resolve => setTimeout(resolve, 1000));
-  // Navigate to the billing summary PAGE
-    await PAGE.goto('https://www.fedex.com/online/billing/cbs/summary');
-    new Promise(resolve => setTimeout(resolve, 5000));
-  await PAGE.click('text=CONTINUE');
-
-  // Extract cookies from the PAGE where login occurred
-  const COOKIES: puppeteer.Cookie[] = await BROWSER.cookies();
-
-  const COOKIE_STRING: string = COOKIES.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
-
-  await BROWSER.close();
-  const AUTH_EXP: fedexInterface.auth = {
-    web_bearer_token: AUTH.web_bearer_token,
-    web_client_cookie: COOKIE_STRING,
-    web_transaction_id: AUTH.web_transaction_id,
-    web_client_id: AUTH.web_client_id,  
-    web_account_number: AUTH.web_account_number,
-    api_bearer_token: AUTH.api_bearer_token,
-    api_client_id: AUTH.api_client_id,
-    api_client_secret: AUTH.api_client_secret,
-    api_bearer_token_expires_at: AUTH.api_bearer_token_expires_at,
-    web_client_username: AUTH.web_client_username,
-    web_client_password: AUTH.web_client_password,
-  };
-  
-  return AUTH_EXP;
+  // return the original Auth plus the new cookie header
+  return { ...AUTH, web_client_cookie: cookieString };
 }
 
 /**

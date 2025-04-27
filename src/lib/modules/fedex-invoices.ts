@@ -2,14 +2,18 @@ import * as interfaces from "../interfaces";
 import { Readable } from 'stream';
 import csvParser from 'csv-parser';
 import * as fedex from "../integrations/fedex.js";
+import * as fedexInterface from "../integrations/fedex_interface.js";
 import Papa from 'papaparse';
 
-export async function getCSVFileList() {
-    const FILE_LIST: any = await fedex.getFileList();
+export async function getCSVFileList(AUTH: fedexInterface.auth,
+    browserBinding: Fetcher): Promise<any> {
+    const CDK_AUTH_UPDATED: fedexInterface.auth = await fedex.getCookie(AUTH, browserBinding);
+
+    const FILE_LIST: any = await fedex.getDownloadFileList(CDK_AUTH_UPDATED);
     console.log("FILE_LIST: ", FILE_LIST);
     let invoice_data = [];
     for (let i = 0; i < FILE_LIST.length; i++) {
-        const CSV_FILE = await fedex.getFile(FILE_LIST[i]);
+        const CSV_FILE = await fedex.getDownloadFile(CDK_AUTH_UPDATED, FILE_LIST[i]);
         invoice_data.push(await parseInvoiceCSV(CSV_FILE));
     }
     

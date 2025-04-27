@@ -1,3 +1,9 @@
-name = "moneybird-incoming-invoice-handler"
-type = "typescript"
-nodejs_compat = true
+# wrangler.toml
+name              = "moneybird-incoming-invoice-handler"
+main              = "src/index.ts"            # ← point at your TS entry
+workers_dev       = true                      # ← enable remote preview / dev
+compatibility_date  = "2025-04-27"
+compatibility_flags = ["nodejs_compat_v2"]    # ← load Node built-ins & polyfills
+
+# This must be *top-level* (not under [bindings] or [vars]):
+browser = { binding = "MY_BROWSER" }
